@@ -1,6 +1,6 @@
 #
 #       .-"""-.__
-#      /      ' o'\    tiny spread sheet - main file.
+#      /      ' o'\    tiny spread sheet - Makefile
 #   ,-;  '.  :   _c    Oct 15 2024
 #  :_."\._ ) ::-"
 #         ""m "m
