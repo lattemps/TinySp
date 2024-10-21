@@ -1,3 +1,9 @@
+#
+#       .-"""-.__
+#      /      ' o'\    tiny spread sheet - makefile.
+#   ,-;  '.  :   _c    Oct 21 2024
+#  :_."\._ ) ::-"
+#         ""m "m
 objs = main.o
 flags = -Wall -Wextra -Wpedantic
 ignore = -Wno-switch

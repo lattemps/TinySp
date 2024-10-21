@@ -14,6 +14,8 @@
 static void print_usage (void);
 static void parse_arguments (int, char**, struct TinySp *const);
 
+static void read_sheet_content (const char *const, char **const, size_t *const);
+
 int main (int argc, char **argv)
 {
     if (argc == 1) print_usage();
@@ -22,6 +24,7 @@ int main (int argc, char **argv)
     memset(&sp, 0, sizeof(sp));
 
     parse_arguments(argc, argv, &sp);
+    read_sheet_content(sp.spname, &sp.content, &sp.length);
 
     return 0;
 }
@@ -41,10 +44,30 @@ static void parse_arguments (int argc, char **argv, struct TinySp *const sp)
     while ((opt = getopt(argc, argv, ":s:")) != -1) {
         switch (opt) {
             case 's': sp->spname = optarg; break;
-            case ':': errx(EXIT_FAILURE, "cannot continue since `-%c` option requieres an argument", optopt); break;
-            case '?': errx(EXIT_FAILURE, "cannot continue since `-%c` option is unknown", optopt); break;
+            case ':': errx(1, "cannot continue since `-%c` option requieres an argument", optopt); break;
+            case '?': errx(1, "cannot continue since `-%c` option is unknown", optopt); break;
         }
     }
 
-    if (!sp->spname) errx(EXIT_FAILURE, "cannot continue since no sheet was provided");
+    if (!sp->spname) errx(1, "cannot continue since no sheet was provided");
+}
+
+static void read_sheet_content (const char *const filename, char **const content, size_t *const length)
+{
+    FILE *sheet = fopen(filename, "r");
+    if (!sheet)
+        err(1, "cannot continue since '%s' file does not work", filename);
+
+    fseek(sheet, 0, SEEK_END);
+    *length = ftell(sheet);
+    fseek(sheet, 0, SEEK_SET);
+
+    *content = (char*) calloc(*length + 1, sizeof(char));
+    __check_mem(*content);
+
+    const size_t didread = fread(*content, 1, *length, sheet);
+
+    if (didread != *length)
+        errx(1, "cannot continue since not whole file was read: %ld/%ld bytes were read", didread, *length);
+    fclose(sheet);
 }
