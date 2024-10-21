@@ -15,6 +15,7 @@ static void print_usage (void);
 static void parse_arguments (int, char**, struct TinySp *const);
 
 static void read_sheet_content (const char *const, char **const, size_t *const);
+static void determinate_sheet_dimensions (const char*, unsigned short *const, unsigned short *const);
 
 int main (int argc, char **argv)
 {
@@ -26,6 +27,9 @@ int main (int argc, char **argv)
     parse_arguments(argc, argv, &sp);
     read_sheet_content(sp.spname, &sp.content, &sp.length);
 
+    determinate_sheet_dimensions(sp.content, &sp.dims.rows, &sp.dims.cols);
+
+    printf("%d %d\n", sp.dims.rows, sp.dims.cols);
     return 0;
 }
 
@@ -70,4 +74,23 @@ static void read_sheet_content (const char *const filename, char **const content
     if (didread != *length)
         errx(1, "cannot continue since not whole file was read: %ld/%ld bytes were read", didread, *length);
     fclose(sheet);
+}
+
+static void determinate_sheet_dimensions (const char *src, unsigned short *const rows, unsigned short *const cols)
+{
+    bool inStr = false;
+    unsigned short Tcols = 0;
+
+    while (*src) {
+        register char a = *src++;
+        if (a == '\n') {
+            *cols = (Tcols > *cols) ? Tcols : *cols;
+            Tcols = 0;
+            *rows += 1;
+        }
+        else if (a == '"') inStr = !inStr;
+        else if (a == '|' && !inStr) Tcols++;
+    }
+
+    *cols = (Tcols > *cols) ? Tcols : *cols;
 }
