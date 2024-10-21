@@ -1,23 +1,15 @@
-#
-#       .-"""-.__
-#      /      ' o'\    tiny spread sheet - Makefile
-#   ,-;  '.  :   _c    Oct 15 2024
-#  :_."\._ ) ::-"
-#         ""m "m
-#
-objs = tinysp.o
-cxx = gcc
+objs = main.o
 flags = -Wall -Wextra -Wpedantic
-avoid = -Wno-switch
-exec = TinySp
+ignore = -Wno-switch
+exec = tsp
 
 all: $(exec)
 
 $(exec): $(objs)
-	$(cxx)	-o $(exec) $(objs)
+	gcc	-o $(exec) $(objs)
 
 %.o: %.c
-	$(cxx)	$(flags) -c $<
+	gcc	-c $< $(flags)
 
 clean:
-	rm	-rf $(objs) $(exec) '\\'
+	rm	-rf $(objs) $(exec)
