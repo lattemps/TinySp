@@ -4,7 +4,7 @@
 #   ,-;  '.  :   _c    Oct 21 2024
 #  :_."\._ ) ::-"
 #         ""m "m
-objs = main.o
+objs = main.o lexer.o
 flags = -Wall -Wextra -Wpedantic
 ignore = -Wno-switch
 exec = tsp
@@ -15,7 +15,7 @@ $(exec): $(objs)
 	gcc	-o $(exec) $(objs)
 
 %.o: %.c
-	gcc	-c $< $(flags)
+	gcc	-c $< $(flags) $(ignore)
 
 clean:
 	rm	-rf $(objs) $(exec)

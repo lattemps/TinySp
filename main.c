@@ -5,7 +5,7 @@
  *  :_."\._ ) ::-"
  *         ""m "m
  */
-#include "tinysp.h"
+#include "lexer.h"
 #include <err.h>
 #include <getopt.h>
 #include <string.h>
@@ -29,7 +29,18 @@ int main (int argc, char **argv)
 
     determinate_sheet_dimensions(sp.content, &sp.dims.rows, &sp.dims.cols);
 
-    printf("%d %d\n", sp.dims.rows, sp.dims.cols);
+    sp.grid = (struct Cell*) calloc(sp.dims.rows * sp.dims.cols, sizeof(*sp.grid));
+    __check_mem(sp.grid);
+
+    sp.dims.widths = (unsigned short*) calloc(sp.dims.cols, sizeof(*sp.dims.widths));
+    __check_mem(sp.dims.widths);
+
+    lexer_start_lexer(&sp);
+
+    free(sp.content);
+    free(sp.grid);
+    free(sp.dims.widths);
+
     return 0;
 }
 
