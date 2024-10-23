@@ -1,107 +1,91 @@
 /*
  *       .-"""-.__
  *      /      ' o'\    tiny spread sheet - starting point.
- *   ,-;  '.  :   _c    Oct 21 2024
+ *   ,-;  '.  :   _c    Oct 22 2024
  *  :_."\._ ) ::-"
  *         ""m "m
  */
-#include "lexer.h"
+#include "tsp.h"
 #include <err.h>
 #include <getopt.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 static void print_usage (void);
-static void parse_arguments (int, char**, struct TinySp *const);
+static void read_sheet_contents (const char *const, size_t *const, char **const);
 
-static void read_sheet_content (const char *const, char **const, size_t *const);
-static void determinate_sheet_dimensions (const char*, unsigned short *const, unsigned short *const);
+static void det_table_dimensions (const char*, unsigned short *const, unsigned short *const);
 
 int main (int argc, char **argv)
 {
     if (argc == 1) print_usage();
 
-    struct TinySp sp;
-    memset(&sp, 0, sizeof(sp));
+    struct TSP tsp;
+    memset(&tsp, 0, sizeof(tsp));
 
-    parse_arguments(argc, argv, &sp);
-    read_sheet_content(sp.spname, &sp.content, &sp.length);
+    int arg;
+    while ((arg = getopt(argc, argv, ":s:")) != -1)
+    {
+        switch (arg)
+        {
+            case 's': tsp.filename = optarg; break;
+            case 'h': print_usage(); break;
+            case '?': errx(EXIT_FAILURE, "fatal error since '-%c' is not a known option", optopt); break;
+            case ':': errx(EXIT_FAILURE, "fatal error since '-%c' does require an argument", optopt); break;
+        }
+    }
 
-    determinate_sheet_dimensions(sp.content, &sp.dims.rows, &sp.dims.cols);
+    if (!tsp.filename) errx(EXIT_FAILURE, "fatal error since no sheet was given");
+    read_sheet_contents(tsp.filename, &tsp.length, &tsp.sheet);
 
-    sp.grid = (struct Cell*) calloc(sp.dims.rows * sp.dims.cols, sizeof(*sp.grid));
-    __check_mem(sp.grid);
-
-    sp.dims.widths = (unsigned short*) calloc(sp.dims.cols, sizeof(*sp.dims.widths));
-    __check_mem(sp.dims.widths);
-
-    lexer_start_lexer(&sp);
-
-    free(sp.content);
-    free(sp.grid);
-    free(sp.dims.widths);
+    det_table_dimensions(tsp.sheet, &tsp.dim.rows, &tsp.dim.cols);
 
     return 0;
 }
 
 static void print_usage (void)
 {
-    printf("TinySp - Tiny spread sheet engine (unique version) [%s %s]\n\n", __DATE__, __TIME__);
-    puts("usage: tsp [-s <sheetname>] [arguments]");
-    puts("arguments:");
+    printf("\n\tTSP - Tiny Spread Sheet engine (%s %s)\n", __DATE__, __TIME__);
+    puts("\tusage: tsp    -s <sheet> [arguments]");
+    puts("\targuments:");
+    puts("\t    -s *      specify sheet to be interpreted");
+    puts("\t    -h        print this message\n");
     exit(EXIT_SUCCESS);
 }
 
-static void parse_arguments (int argc, char **argv, struct TinySp *const sp)
-{
-    int opt;
-
-    while ((opt = getopt(argc, argv, ":s:")) != -1) {
-        switch (opt) {
-            case 's': sp->spname = optarg; break;
-            case ':': errx(1, "cannot continue since `-%c` option requieres an argument", optopt); break;
-            case '?': errx(1, "cannot continue since `-%c` option is unknown", optopt); break;
-        }
-    }
-
-    if (!sp->spname) errx(1, "cannot continue since no sheet was provided");
-}
-
-static void read_sheet_content (const char *const filename, char **const content, size_t *const length)
+static void read_sheet_contents (const char *const filename, size_t *const bytes, char **const content)
 {
     FILE *sheet = fopen(filename, "r");
-    if (!sheet)
-        err(1, "cannot continue since '%s' file does not work", filename);
+    if (!sheet) err(EXIT_FAILURE, "fatal error since '%s' sheet does not work!", filename);
 
     fseek(sheet, 0, SEEK_END);
-    *length = ftell(sheet);
+    *bytes = ftell(sheet);
     fseek(sheet, 0, SEEK_SET);
 
-    *content = (char*) calloc(*length + 1, sizeof(char));
-    __check_mem(*content);
+    *content = (char*) calloc(*bytes + 1, sizeof(**content));
+    __check_ptr(*content);
 
-    const size_t didread = fread(*content, 1, *length, sheet);
+    const size_t read = fread(*content, 1, *bytes, sheet);
+    if (read != *bytes) errx(EXIT_FAILURE, "fatal error since not whole file was read: %ld/%ld bytes total", read, *bytes);
 
-    if (didread != *length)
-        errx(1, "cannot continue since not whole file was read: %ld/%ld bytes were read", didread, *length);
     fclose(sheet);
 }
 
-static void determinate_sheet_dimensions (const char *src, unsigned short *const rows, unsigned short *const cols)
+static void det_table_dimensions (const char *a, unsigned short *const r, unsigned short *const c)
 {
-    bool inStr = false;
-    unsigned short Tcols = 0;
+    unsigned short mc = 0;
 
-    while (*src) {
-        register char a = *src++;
-        if (a == '\n') {
-            *cols = (Tcols > *cols) ? Tcols : *cols;
-            Tcols = 0;
-            *rows += 1;
+    while (*a)
+    {
+        const char this = *a++;
+        if (this == '|') *c += 1;
+        else if (this == '\n')
+        {
+            mc = (mc > *c) ? mc : *c;
+            *r += 1;
+            *c = 0;
         }
-        else if (a == '"') inStr = !inStr;
-        else if (a == '|' && !inStr) Tcols++;
     }
 
-    *cols = (Tcols > *cols) ? Tcols : *cols;
+    *c = mc;
 }
