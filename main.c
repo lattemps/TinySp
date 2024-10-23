@@ -5,11 +5,8 @@
  *  :_."\._ ) ::-"
  *         ""m "m
  */
-#include "tsp.h"
-#include <err.h>
+#include "lexer.h"
 #include <getopt.h>
-#include <stdlib.h>
-#include <string.h>
 
 static void print_usage (void);
 static void read_sheet_contents (const char *const, size_t *const, char **const);
@@ -40,6 +37,17 @@ int main (int argc, char **argv)
 
     det_table_dimensions(tsp.sheet, &tsp.dim.rows, &tsp.dim.cols);
 
+    tsp.grid = (struct Cell*) calloc(tsp.dim.rows * tsp.dim.cols, sizeof(*tsp.grid));
+    __check_ptr(tsp.grid);
+
+    tsp.dim.widths = (unsigned short*) calloc(tsp.dim.cols, sizeof(*tsp.dim.widths));
+    __check_ptr(tsp.dim.widths);
+
+    lexer_start(&tsp);
+
+    free(tsp.sheet);
+    free(tsp.grid);
+    free(tsp.dim.widths);
     return 0;
 }
 

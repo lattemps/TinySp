@@ -3,7 +3,7 @@
 #   ,-;  '.  :   _c    Oct 22 2024
 #  :_."\._ ) ::-"
 #         ""m "m
-objs = main.o
+objs = main.o lexer.o
 flags = -Wall -Wextra -Wpedantic
 avoid = -Wno-switch
 exec = tsp
