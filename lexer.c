@@ -12,11 +12,8 @@ struct Lexer
     struct          Cell *cc;
     char            *content;
     size_t          pos, len;
-    unsigned short  offset, rowidth;
-    short           row;
+    unsigned short  offset, row;
 };
-
-static enum TokenType eat_character (const char, const char);
 
 void lexer_start (struct TSP *const tsp)
 {
@@ -25,26 +22,31 @@ void lexer_start (struct TSP *const tsp)
 
     lex.content  = tsp->sheet;
     lex.len      = tsp->length;
-    lex.offset   = -1;
-    lex.rowidth  = tsp->dim.cols;
-    lex.cc       = &tsp->grid[lex.row * lex.rowidth];
+    lex.cc       = &tsp->grid[lex.row * tsp->dim.cols];
 
     for (; lex.pos < lex.len; lex.pos++)
     {
-        enum TokenType type = eat_character(lex.content[lex.pos], lex.content[++lex.pos]);
+        enum TokenType thistype = tokens_unknown;
+
+        switch (lex.content[lex.pos++])
+        {
+            case '\0':
+                lex.pos = lex.len + 1;
+                break;
+
+            case '\n':
+                lex.cc = &tsp->grid[++lex.row * tsp->dim.cols];
+                lex.offset = 0;
+                continue;
+
+            case '|':
+                lex.cc++;
+                break;
+        }
+
         lex.offset++;
-
-        if (type == tokens_eof) break;
     }
+
+    puts("ok!");
 }
 
-static enum TokenType eat_character (const char this, const char next)
-{
-    switch (this)
-    {
-        case \0'':
-        case '\n':
-        case '|':
-        return (enum TokenType) this:
-    }
-}

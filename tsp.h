@@ -16,6 +16,7 @@
 
 enum TokenType
 {
+    tokens_unknown      = -1,
     tokens_eof          = 0,
     tokens_newline      = 1,
     tokens_delimiter    = 2,
